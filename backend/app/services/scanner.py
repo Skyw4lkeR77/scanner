@@ -61,11 +61,16 @@ def run_scan_job(job_id: int):
         db.commit()
 
         try:
+            # Force Go runtime to use minimum threads to avoid ulimit -u crashes on shared hosting
+            custom_env = os.environ.copy()
+            custom_env["GOMAXPROCS"] = "1"
+
             process = subprocess.Popen(
                 cmd,
                 stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE,
                 text=True,
+                env=custom_env,
             )
             # Store PID for stop capability
             job.pid = process.pid
