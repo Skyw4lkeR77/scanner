@@ -23,6 +23,11 @@ def build_command(target: str, job_id: int, options: dict = None) -> list[str]:
         "-j",
         "-rate-limit", str(settings.NUCLEI_RATE_LIMIT),
         "-c", str(settings.NUCLEI_CONCURRENCY),
+        "-bs", "2",
+        "-hbs", "2",
+        "-headc", "2",
+        "-no-interactsh",
+        "-duc",
         "-stats",
         "-o", output_file,
     ]

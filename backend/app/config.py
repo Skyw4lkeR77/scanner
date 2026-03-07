@@ -27,7 +27,7 @@ class Settings(BaseSettings):
     NUCLEI_BIN: str = "/usr/local/bin/nuclei"
     NUCLEI_TEMPLATES: str = "~/nuclei-templates"
     NUCLEI_RATE_LIMIT: int = 50
-    NUCLEI_CONCURRENCY: int = 25
+    NUCLEI_CONCURRENCY: int = 5
 
     # Scan limits
     MAX_CONCURRENT_SCANS_PER_USER: int = 5
