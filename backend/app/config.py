@@ -25,6 +25,7 @@ class Settings(BaseSettings):
 
     # Nuclei
     NUCLEI_BIN: str = "/usr/local/bin/nuclei"
+    KATANA_BIN: str = "/usr/local/bin/katana"
     NUCLEI_TEMPLATES: str = "~/nuclei-templates"
     NUCLEI_RATE_LIMIT: int = 50
     NUCLEI_CONCURRENCY: int = 5

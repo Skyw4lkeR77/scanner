@@ -29,10 +29,27 @@ def run_scan_job(job_id: int):
         db.commit()
 
         log_action(db, "scan_started", user_id=job.user_id,
-                   details=f"Scan started for {job.target_url} (job {job_id})")
+                   details=f"Scan started for {job.target_url} (mode: {job.scan_mode}, job {job_id})")
+
+        # Handle Deep Scan (Katana)
+        target_argument = job.target_url
+        is_list = False
+        
+        if job.scan_mode == "deep":
+            from app.services.katana import run_katana
+            
+            job.progress_pct = 7.0
+            db.commit()
+            
+            katana_output = run_katana(job.target_url, job_id)
+            if katana_output:
+                target_argument = katana_output
+                is_list = True
+                log_action(db, "katana_completed", user_id=job.user_id, 
+                           details=f"Katana crawling found endpoints for {job.target_url}")
 
         # Build command
-        cmd, output_file = build_command(job.target_url, job_id)
+        cmd, output_file = build_command(target_argument, job_id, is_list=is_list)
         job.output_file = output_file
         db.commit()
 

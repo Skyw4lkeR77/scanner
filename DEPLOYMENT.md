@@ -75,14 +75,23 @@ sudo systemctl enable redis-server
 sudo systemctl start redis-server
 ```
 
-### Step 6: Install Nuclei
+### Step 6: Install Nuclei & Katana
 
+**Install Nuclei:**
 ```bash
 # Download latest release
 wget https://github.com/projectdiscovery/nuclei/releases/latest/download/nuclei_*_linux_amd64.zip
 unzip nuclei_*_linux_amd64.zip
 sudo mv nuclei /usr/local/bin/
 nuclei -update-templates
+```
+
+**Install Katana (for Deep Scans):**
+```bash
+# Download Katana release
+wget https://github.com/projectdiscovery/katana/releases/latest/download/katana_*_linux_amd64.zip
+unzip katana_*_linux_amd64.zip
+sudo mv katana /usr/local/bin/
 ```
 
 ### Step 7: Create Systemd Services

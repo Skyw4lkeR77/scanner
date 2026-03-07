@@ -1,7 +1,7 @@
 """Pydantic schemas for request/response validation."""
 from datetime import datetime
-from typing import Optional, List
-from pydantic import BaseModel, EmailStr, Field, field_validator
+from typing import Optional, List, Dict, Any
+from pydantic import BaseModel, EmailStr, Field, field_validator, HttpUrl, ConfigDict
 import re
 
 
@@ -68,9 +68,10 @@ class UserOut(BaseModel):
 
 
 # ─── Scan / Jobs ────────────────────────────────────────────────────────────
-class ScanRequest(BaseModel):
-    target_url: str = Field(..., min_length=5, max_length=2048)
-    scan_note: Optional[str] = Field(None, max_length=500)
+class JobCreate(BaseModel):
+    target_url: HttpUrl
+    note: Optional[str] = None
+    scan_mode: str = Field(default="fast", description="'fast' or 'deep'")
 
 
 class JobOut(BaseModel):
@@ -78,6 +79,7 @@ class JobOut(BaseModel):
     user_id: int
     target_url: str
     status: str
+    scan_mode: str = "fast"
     progress_pct: float
     scan_note: Optional[str] = None
     findings_count: int = 0

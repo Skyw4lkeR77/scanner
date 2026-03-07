@@ -17,6 +17,7 @@ const STATUS_ICONS = {
 export default function ScanPage() {
     const [targetUrl, setTargetUrl] = useState('')
     const [scanNote, setScanNote] = useState('')
+    const [scanMode, setScanMode] = useState('fast')
     const [submitting, setSubmitting] = useState(false)
     const [submitError, setSubmitError] = useState('')
     const [submitSuccess, setSubmitSuccess] = useState('')
@@ -52,10 +53,11 @@ export default function ScanPage() {
         setSubmitSuccess('')
         setSubmitting(true)
         try {
-            await api.submitScan(targetUrl, scanNote || undefined)
+            await api.submitScan(targetUrl, scanNote || undefined, scanMode)
             setSubmitSuccess('Scan submitted successfully! It will start shortly.')
             setTargetUrl('')
             setScanNote('')
+            setScanMode('fast')
             loadJobs()
         } catch (err) {
             setSubmitError(err.message)
@@ -117,7 +119,40 @@ export default function ScanPage() {
                             maxLength={500}
                         />
                     </div>
-                    <button type="submit" className="btn btn-primary" disabled={submitting}>
+                    <div className="form-group">
+                        <label className="form-label">Scan Mode</label>
+                        <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) minmax(0, 1fr)', gap: '1rem', marginTop: 8 }}>
+                            <label className="card" style={{ display: 'flex', alignItems: 'flex-start', gap: 12, cursor: 'pointer', padding: 12, margin: 0, border: scanMode === 'fast' ? '1px solid var(--primary-color)' : '' }}>
+                                <input
+                                    type="radio"
+                                    name="scanMode"
+                                    value="fast"
+                                    checked={scanMode === 'fast'}
+                                    onChange={e => setScanMode(e.target.value)}
+                                    style={{ marginTop: 4 }}
+                                />
+                                <div>
+                                    <div style={{ fontWeight: 500 }}>Fast Scan</div>
+                                    <div style={{ fontSize: 'var(--font-size-xs)', color: 'var(--text-muted)', marginTop: 4 }}>Standard Nuclei vulnerability assessment on the target URL only.</div>
+                                </div>
+                            </label>
+                            <label className="card" style={{ display: 'flex', alignItems: 'flex-start', gap: 12, cursor: 'pointer', padding: 12, margin: 0, border: scanMode === 'deep' ? '1px solid var(--warning-color)' : '' }}>
+                                <input
+                                    type="radio"
+                                    name="scanMode"
+                                    value="deep"
+                                    checked={scanMode === 'deep'}
+                                    onChange={e => setScanMode(e.target.value)}
+                                    style={{ marginTop: 4 }}
+                                />
+                                <div>
+                                    <div style={{ fontWeight: 500, color: 'var(--warning-color)' }}>Deep Scan (Katana + Nuclei)</div>
+                                    <div style={{ fontSize: 'var(--font-size-xs)', color: 'var(--text-muted)', marginTop: 4 }}>Passively crawls the target to discover all endpoints and parameters before scanning. <strong>Significantly slower.</strong></div>
+                                </div>
+                            </label>
+                        </div>
+                    </div>
+                    <button type="submit" className="btn btn-primary" disabled={submitting} style={{ marginTop: '1rem' }}>
                         {submitting ? <><div className="spinner" /> Submitting...</> : <><Crosshair size={16} /> Start Scan</>}
                     </button>
                 </form>

@@ -64,6 +64,7 @@ class Job(Base):
     id = Column(Integer, primary_key=True, index=True)
     user_id = Column(Integer, ForeignKey("users.id"), nullable=False, index=True)
     target_url = Column(String(2048), nullable=False)
+    scan_mode = Column(String(50), default="fast", nullable=False)  # 'fast' or 'deep'
     status = Column(String(20), default=JobStatus.QUEUED, nullable=False, index=True)
     progress_pct = Column(Float, default=0.0)
     scan_note = Column(Text, nullable=True)

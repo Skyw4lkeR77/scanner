@@ -10,7 +10,8 @@
 - **Background Scanning** — Scans run server-side via Redis Queue; persist even if browser closes
 - **OWASP Mapping** — 200+ CWE-to-OWASP mappings + tag-based heuristics
 - **Findings Management** — Mark as False Positive / Needs Review / Confirmed
-- **Export** — Download findings as JSON or CSV
+- **Deep Scan Mode**: Integrated with ProjectDiscovery **Katana** for passive/active crawling to discover endpoints before scanning.
+- **Reporting & Export**: Export findings in detailed JSON or CSV formats.
 - **Target Validation** — SSRF protection (blocks private IPs, cloud metadata)
 - **Rate Limiting** — Per-user and global scan limits
 - **Audit Logging** — All actions logged (login, scan, user changes)
@@ -30,12 +31,13 @@
 
 ## Quick Start (Local Development)
 
-### Prerequisites
+### Requirements
 
 - Python 3.10+
 - Node.js 18+
-- Redis server
-- Nuclei (optional for scanning, app works without it)
+- Redis Server
+- [Nuclei](https://github.com/projectdiscovery/nuclei) (v3.3+)
+- [Katana](https://github.com/projectdiscovery/katana) (for Deep Scan feature)for scanning, app works without it)
 
 ### 1. Clone & Setup Backend
 

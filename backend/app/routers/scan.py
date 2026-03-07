@@ -6,7 +6,7 @@ from sqlalchemy.orm import Session as DBSession
 from sqlalchemy import desc, func
 from app.database import get_db
 from app.models import User, Job, Finding, JobStatus
-from app.schemas import ScanRequest, JobOut, JobDetail, FindingOut, PaginatedResponse, MessageResponse
+from app.schemas import JobCreate, JobOut, JobDetail, FindingOut, PaginatedResponse, MessageResponse
 from app.dependencies import get_current_user, get_client_ip
 from app.services.audit import log_action
 from app.utils.validators import validate_target_url
@@ -19,7 +19,7 @@ router = APIRouter(prefix="/api/scan", tags=["scan"])
 
 @router.post("", response_model=JobOut, status_code=201)
 def submit_scan(
-    body: ScanRequest,
+    body: JobCreate,
     request: Request,
     db: DBSession = Depends(get_db),
     user: User = Depends(get_current_user),
@@ -56,9 +56,10 @@ def submit_scan(
     # Create job
     job = Job(
         user_id=user.id,
-        target_url=body.target_url.strip(),
+        target_url=str(body.target_url).strip().rstrip('/'),  # HttpUrl to str
+        scan_mode=body.scan_mode,
         status=JobStatus.QUEUED,
-        scan_note=body.scan_note,
+        scan_note=body.note,
     )
     db.add(job)
     db.commit()

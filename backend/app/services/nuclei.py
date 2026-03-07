@@ -11,13 +11,15 @@ from app.config import settings
 from app.services.owasp_mapper import get_owasp_category
 
 
-def build_command(target: str, job_id: int, options: dict = None) -> list[str]:
+def build_command(target: str, job_id: int, options: dict = None, is_list: bool = False) -> list[str]:
     """Build the nuclei CLI command."""
     output_file = os.path.join(settings.SCAN_OUTPUT_DIR, f"scan-{job_id}.json")
 
+    target_flag = "-l" if is_list else "-u"
+    
     cmd = [
         settings.NUCLEI_BIN,
-        "-u", target,
+        target_flag, target,
         "-severity", "low,medium,high,critical",
         "-t", os.path.expanduser(settings.NUCLEI_TEMPLATES),
         "-j",
