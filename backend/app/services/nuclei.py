@@ -20,7 +20,7 @@ def build_command(target: str, job_id: int, options: dict = None) -> list[str]:
         "-u", target,
         "-severity", "low,medium,high,critical",
         "-t", os.path.expanduser(settings.NUCLEI_TEMPLATES),
-        "-json",
+        "-j",
         "-rate-limit", str(settings.NUCLEI_RATE_LIMIT),
         "-c", str(settings.NUCLEI_CONCURRENCY),
         "-stats",
