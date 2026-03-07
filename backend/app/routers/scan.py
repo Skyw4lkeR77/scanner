@@ -28,7 +28,8 @@ def submit_scan(
     ip = get_client_ip(request)
 
     # Validate target URL
-    is_valid, error = validate_target_url(body.target_url)
+    target_url_str = str(body.target_url)
+    is_valid, error = validate_target_url(target_url_str)
     if not is_valid:
         raise HTTPException(status_code=400, detail=error)
 
