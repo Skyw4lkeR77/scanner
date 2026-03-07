@@ -48,12 +48,20 @@ const api = {
     dashboard: () => request('/dashboard'),
 
     // Scan
-    submitScan: (target_url, scan_note) => request('/scan', { method: 'POST', body: { target_url, scan_note } }),
+    submitScan: (target_url, note, scan_mode = 'fast') => request('/scan', { 
+        method: 'POST', 
+        body: { target_url, note, scan_mode } 
+    }),
     listScans: (page = 1, status = '') => request(`/scan?page=${page}${status ? `&status=${status}` : ''}`),
     getScan: (id) => request(`/scan/${id}`),
+    getScanReport: (id) => request(`/scan/${id}/report`),
     stopScan: (id) => request(`/scan/${id}/stop`, { method: 'POST' }),
-    getFindings: (jobId, page = 1, severity = '', owasp = '') =>
-        request(`/scan/${jobId}/findings?page=${page}${severity ? `&severity=${severity}` : ''}${owasp ? `&owasp=${owasp}` : ''}`),
+    getScannerStatus: () => request('/scan/status/scanners'),
+    
+    // Findings
+    getFindings: (jobId, page = 1, severity = '', owasp = '', source = '') =>
+        request(`/scan/${jobId}/findings?page=${page}${severity ? `&severity=${severity}` : ''}${owasp ? `&owasp=${owasp}` : ''}${source ? `&source=${source}` : ''}`),
+    getFindingDetail: (jobId, findingId) => request(`/scan/${jobId}/findings/${findingId}`),
     exportFindings: (jobId, format = 'json') => request(`/scan/${jobId}/export?format=${format}`),
 
     // Findings

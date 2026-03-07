@@ -2,7 +2,8 @@ import { useState, useEffect, useCallback } from 'react'
 import { Link } from 'react-router-dom'
 import {
     Crosshair, Search, RefreshCw, ExternalLink, StopCircle, Clock,
-    CheckCircle, XCircle, AlertCircle
+    CheckCircle, XCircle, AlertCircle, Zap, Layers, Shield,
+    Cpu, Globe
 } from 'lucide-react'
 import api from '../api/client'
 
@@ -14,6 +15,30 @@ const STATUS_ICONS = {
     stopped: AlertCircle,
 }
 
+const SCAN_MODES = {
+    fast: {
+        label: 'Fast Scan',
+        description: 'Quick scan with basic templates (~5-15 min)',
+        icon: Zap,
+        color: 'var(--success-color)',
+        time_estimate: '5-15 min'
+    },
+    deep: {
+        label: 'Deep Scan',
+        description: 'Crawling + Nuclei + Xray for thorough coverage (~30-60 min)',
+        icon: Layers,
+        color: 'var(--warning-color)',
+        time_estimate: '30-60 min'
+    },
+    comprehensive: {
+        label: 'Comprehensive Scan',
+        description: 'Maximum coverage with all tools and extended timeout (~1-2 hours)',
+        icon: Shield,
+        color: 'var(--accent-color)',
+        time_estimate: '1-2 hours'
+    }
+}
+
 export default function ScanPage() {
     const [targetUrl, setTargetUrl] = useState('')
     const [scanNote, setScanNote] = useState('')
@@ -21,6 +46,7 @@ export default function ScanPage() {
     const [submitting, setSubmitting] = useState(false)
     const [submitError, setSubmitError] = useState('')
     const [submitSuccess, setSubmitSuccess] = useState('')
+    const [scannerStatus, setScannerStatus] = useState(null)
 
     const [jobs, setJobs] = useState([])
     const [page, setPage] = useState(1)
@@ -37,7 +63,17 @@ export default function ScanPage() {
         setLoading(false)
     }, [page, statusFilter])
 
-    useEffect(() => { loadJobs() }, [loadJobs])
+    const loadScannerStatus = useCallback(async () => {
+        try {
+            const status = await api.getScannerStatus()
+            setScannerStatus(status)
+        } catch { }
+    }, [])
+
+    useEffect(() => { 
+        loadJobs()
+        loadScannerStatus()
+    }, [loadJobs, loadScannerStatus])
 
     // Auto-refresh for active scans
     useEffect(() => {
@@ -54,7 +90,7 @@ export default function ScanPage() {
         setSubmitting(true)
         try {
             await api.submitScan(targetUrl, scanNote || undefined, scanMode)
-            setSubmitSuccess('Scan submitted successfully! It will start shortly.')
+            setSubmitSuccess(`Scan submitted successfully! Mode: ${SCAN_MODES[scanMode].label}. It will start shortly.`)
             setTargetUrl('')
             setScanNote('')
             setScanMode('fast')
@@ -76,13 +112,52 @@ export default function ScanPage() {
         }
     }
 
+    // Format duration from seconds
+    const formatDuration = (seconds) => {
+        if (!seconds) return '-'
+        const hours = Math.floor(seconds / 3600)
+        const mins = Math.floor((seconds % 3600) / 60)
+        const secs = seconds % 60
+        if (hours > 0) return `${hours}h ${mins}m ${secs}s`
+        if (mins > 0) return `${mins}m ${secs}s`
+        return `${secs}s`
+    }
+
+    // Format datetime in Asia/Jakarta timezone
+    const formatDateTime = (dateStr) => {
+        if (!dateStr) return '-'
+        const date = new Date(dateStr)
+        return date.toLocaleString('id-ID', {
+            timeZone: 'Asia/Jakarta',
+            year: 'numeric',
+            month: '2-digit',
+            day: '2-digit',
+            hour: '2-digit',
+            minute: '2-digit',
+            second: '2-digit'
+        }) + ' WIB'
+    }
+
     return (
         <div className="animate-fade">
             <div className="page-header">
                 <div>
-                    <h1 className="page-title">Scanner</h1>
+                    <h1 className="page-title">Security Scanner</h1>
                     <p className="page-subtitle">Submit targets and view scan history</p>
                 </div>
+                {scannerStatus && (
+                    <div style={{ display: 'flex', gap: 'var(--space-2)', fontSize: 'var(--font-size-xs)' }}>
+                        <span className={`badge ${scannerStatus.nuclei_available ? 'badge-success' : 'badge-error'}`}>
+                            <Cpu size={10} /> Nuclei
+                        </span>
+                        <span className={`badge ${scannerStatus.katana_available ? 'badge-success' : 'badge-error'}`}>
+                            <Globe size={10} /> Katana
+                        </span>
+                        <span className={`badge ${scannerStatus.xray_available ? 'badge-success' : 'badge-warning'}`}>
+                            <Shield size={10} /> Xray
+                        </span>
+                    </div>
+                )}
             </div>
 
             {/* Submit Scan Form */}
@@ -119,39 +194,75 @@ export default function ScanPage() {
                             maxLength={500}
                         />
                     </div>
+                    
+                    {/* Scan Mode Selection */}
                     <div className="form-group">
                         <label className="form-label">Scan Mode</label>
-                        <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) minmax(0, 1fr)', gap: '1rem', marginTop: 8 }}>
-                            <label className="card" style={{ display: 'flex', alignItems: 'flex-start', gap: 12, cursor: 'pointer', padding: 12, margin: 0, border: scanMode === 'fast' ? '1px solid var(--primary-color)' : '' }}>
-                                <input
-                                    type="radio"
-                                    name="scanMode"
-                                    value="fast"
-                                    checked={scanMode === 'fast'}
-                                    onChange={e => setScanMode(e.target.value)}
-                                    style={{ marginTop: 4 }}
-                                />
-                                <div>
-                                    <div style={{ fontWeight: 500 }}>Fast Scan</div>
-                                    <div style={{ fontSize: 'var(--font-size-xs)', color: 'var(--text-muted)', marginTop: 4 }}>Standard Nuclei vulnerability assessment on the target URL only.</div>
-                                </div>
-                            </label>
-                            <label className="card" style={{ display: 'flex', alignItems: 'flex-start', gap: 12, cursor: 'pointer', padding: 12, margin: 0, border: scanMode === 'deep' ? '1px solid var(--warning-color)' : '' }}>
-                                <input
-                                    type="radio"
-                                    name="scanMode"
-                                    value="deep"
-                                    checked={scanMode === 'deep'}
-                                    onChange={e => setScanMode(e.target.value)}
-                                    style={{ marginTop: 4 }}
-                                />
-                                <div>
-                                    <div style={{ fontWeight: 500, color: 'var(--warning-color)' }}>Deep Scan (Katana + Nuclei)</div>
-                                    <div style={{ fontSize: 'var(--font-size-xs)', color: 'var(--text-muted)', marginTop: 4 }}>Passively crawls the target to discover all endpoints and parameters before scanning. <strong>Significantly slower.</strong></div>
-                                </div>
-                            </label>
+                        <div style={{ 
+                            display: 'grid', 
+                            gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', 
+                            gap: '1rem', 
+                            marginTop: 8 
+                        }}>
+                            {Object.entries(SCAN_MODES).map(([mode, config]) => {
+                                const Icon = config.icon
+                                return (
+                                    <label 
+                                        key={mode}
+                                        className="card" 
+                                        style={{ 
+                                            display: 'flex', 
+                                            alignItems: 'flex-start', 
+                                            gap: 12, 
+                                            cursor: 'pointer', 
+                                            padding: 16, 
+                                            margin: 0, 
+                                            border: scanMode === mode ? `2px solid ${config.color}` : '1px solid var(--border-color)',
+                                            background: scanMode === mode ? `${config.color}10` : undefined
+                                        }}
+                                    >
+                                        <input
+                                            type="radio"
+                                            name="scanMode"
+                                            value={mode}
+                                            checked={scanMode === mode}
+                                            onChange={e => setScanMode(e.target.value)}
+                                            style={{ marginTop: 4 }}
+                                        />
+                                        <div style={{ flex: 1 }}>
+                                            <div style={{ 
+                                                fontWeight: 600, 
+                                                color: scanMode === mode ? config.color : 'var(--text-primary)',
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                gap: 6
+                                            }}>
+                                                <Icon size={16} />
+                                                {config.label}
+                                            </div>
+                                            <div style={{ 
+                                                fontSize: 'var(--font-size-xs)', 
+                                                color: 'var(--text-muted)',
+                                                marginTop: 4,
+                                                lineHeight: 1.4
+                                            }}>
+                                                {config.description}
+                                            </div>
+                                            <div style={{ 
+                                                fontSize: 'var(--font-size-xs)', 
+                                                color: 'var(--text-secondary)',
+                                                marginTop: 8
+                                            }}>
+                                                <Clock size={10} style={{ display: 'inline', marginRight: 4 }} />
+                                                Est. time: {config.time_estimate}
+                                            </div>
+                                        </div>
+                                    </label>
+                                )
+                            })}
                         </div>
                     </div>
+
                     <button type="submit" className="btn btn-primary" disabled={submitting} style={{ marginTop: '1rem' }}>
                         {submitting ? <><div className="spinner" /> Submitting...</> : <><Crosshair size={16} /> Start Scan</>}
                     </button>
@@ -198,19 +309,22 @@ export default function ScanPage() {
                                 <thead>
                                     <tr>
                                         <th>Target</th>
+                                        <th>Mode</th>
                                         <th>Status</th>
                                         <th>Findings</th>
-                                        <th>Date</th>
+                                        <th>Duration</th>
+                                        <th>Created (WIB)</th>
                                         <th>Actions</th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     {jobs.map(job => {
                                         const Icon = STATUS_ICONS[job.status] || Clock
+                                        const modeConfig = SCAN_MODES[job.scan_mode] || SCAN_MODES.fast
                                         return (
                                             <tr key={job.id}>
                                                 <td>
-                                                    <div style={{ maxWidth: 300, overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                                                    <div style={{ maxWidth: 250, overflow: 'hidden', textOverflow: 'ellipsis' }}>
                                                         {job.target_url}
                                                     </div>
                                                     {job.scan_note && (
@@ -218,6 +332,17 @@ export default function ScanPage() {
                                                             {job.scan_note}
                                                         </div>
                                                     )}
+                                                    {job.endpoints_discovered > 0 && (
+                                                        <div style={{ fontSize: 'var(--font-size-xs)', color: 'var(--success-color)' }}>
+                                                            {job.endpoints_discovered} endpoints discovered
+                                                        </div>
+                                                    )}
+                                                </td>
+                                                <td>
+                                                    <span className="badge" style={{ background: `${modeConfig.color}20`, color: modeConfig.color }}>
+                                                        <modeConfig.icon size={10} style={{ marginRight: 4 }} />
+                                                        {modeConfig.label}
+                                                    </span>
                                                 </td>
                                                 <td>
                                                     <span className={`badge badge-${job.status}`}>
@@ -225,8 +350,16 @@ export default function ScanPage() {
                                                         {job.status}
                                                     </span>
                                                 </td>
-                                                <td>{job.findings_count}</td>
-                                                <td>{new Date(job.created_at).toLocaleString()}</td>
+                                                <td>
+                                                    <div style={{ fontWeight: 600 }}>{job.findings_count || 0}</div>
+                                                    {job.nuclei_findings_count > 0 && job.xray_findings_count > 0 && (
+                                                        <div style={{ fontSize: 'var(--font-size-xs)', color: 'var(--text-muted)' }}>
+                                                            N:{job.nuclei_findings_count} X:{job.xray_findings_count}
+                                                        </div>
+                                                    )}
+                                                </td>
+                                                <td>{formatDuration(job.scan_duration_seconds)}</td>
+                                                <td>{formatDateTime(job.created_at)}</td>
                                                 <td>
                                                     <div className="table-actions">
                                                         <Link to={`/scan/${job.id}`} className="btn btn-sm btn-secondary">

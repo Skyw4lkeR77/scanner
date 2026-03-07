@@ -71,7 +71,7 @@ class UserOut(BaseModel):
 class JobCreate(BaseModel):
     target_url: HttpUrl
     note: Optional[str] = None
-    scan_mode: str = Field(default="fast", description="'fast' or 'deep'")
+    scan_mode: str = Field(default="fast", description="'fast', 'deep', or 'comprehensive'")
 
 
 class JobOut(BaseModel):
@@ -83,6 +83,10 @@ class JobOut(BaseModel):
     progress_pct: float
     scan_note: Optional[str] = None
     findings_count: int = 0
+    nuclei_findings_count: int = 0
+    xray_findings_count: int = 0
+    endpoints_discovered: int = 0
+    scan_duration_seconds: Optional[int] = None
     error_message: Optional[str] = None
     created_at: datetime
     started_at: Optional[datetime] = None
@@ -94,6 +98,9 @@ class JobOut(BaseModel):
 
 class JobDetail(JobOut):
     output_file: Optional[str] = None
+    nuclei_output_file: Optional[str] = None
+    xray_output_file: Optional[str] = None
+    katana_output_file: Optional[str] = None
     scan_options: Optional[str] = None
 
 
@@ -101,6 +108,7 @@ class JobDetail(JobOut):
 class FindingOut(BaseModel):
     id: int
     job_id: int
+    source: str = "nuclei"  # nuclei, xray, manual
     rule_id: Optional[str] = None
     name: str
     severity: str
@@ -109,13 +117,38 @@ class FindingOut(BaseModel):
     owasp_name: Optional[str] = None
     description: Optional[str] = None
     evidence: Optional[str] = None
+    
+    # Endpoint details
     matched_url: Optional[str] = None
+    endpoint_path: Optional[str] = None
+    http_method: Optional[str] = None
+    
+    # Parameter details
+    vulnerable_parameter: Optional[str] = None
+    parameter_location: Optional[str] = None
+    
+    # Request/Response
+    request_data: Optional[str] = None
+    response_data: Optional[str] = None
+    
+    # Remediation
     remediation: Optional[str] = None
+    references: Optional[str] = None  # JSON string
+    
+    # CVSS
+    cvss_score: Optional[float] = None
+    cvss_vector: Optional[str] = None
+    
     status: str
     created_at: datetime
 
     class Config:
         from_attributes = True
+
+
+class FindingDetail(FindingOut):
+    """Detailed finding with full raw JSON."""
+    raw_json: Optional[str] = None
 
 
 class MarkFindingRequest(BaseModel):
@@ -156,6 +189,16 @@ class DashboardStats(BaseModel):
     recent_scans: List[JobOut] = []
 
 
+class ScannerStatus(BaseModel):
+    """Scanner tools availability status."""
+    nuclei_available: bool = False
+    nuclei_version: Optional[str] = None
+    katana_available: bool = False
+    katana_version: Optional[str] = None
+    xray_available: bool = False
+    xray_version: Optional[str] = None
+
+
 # ─── Pagination ─────────────────────────────────────────────────────────────
 class PaginatedResponse(BaseModel):
     items: list
@@ -168,3 +211,35 @@ class PaginatedResponse(BaseModel):
 # ─── Generic ────────────────────────────────────────────────────────────────
 class MessageResponse(BaseModel):
     message: str
+
+
+# ─── Scan Reports ───────────────────────────────────────────────────────────
+class ScanReport(BaseModel):
+    """Comprehensive scan report."""
+    job_id: int
+    target_url: str
+    scan_mode: str
+    scan_status: str
+    created_at: datetime
+    started_at: Optional[datetime] = None
+    finished_at: Optional[datetime] = None
+    duration_seconds: Optional[int] = None
+    endpoints_discovered: int = 0
+    
+    # Findings summary
+    total_findings: int = 0
+    critical_count: int = 0
+    high_count: int = 0
+    medium_count: int = 0
+    low_count: int = 0
+    info_count: int = 0
+    
+    # Scanner breakdown
+    nuclei_findings: int = 0
+    xray_findings: int = 0
+    
+    # OWASP breakdown
+    owasp_breakdown: Dict[str, int] = {}
+    
+    # Findings list
+    findings: List[FindingOut] = []

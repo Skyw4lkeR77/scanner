@@ -23,12 +23,19 @@ class Settings(BaseSettings):
     # Redis
     REDIS_URL: str = "redis://localhost:6379/0"
 
+    # Timezone
+    TIMEZONE: str = "Asia/Jakarta"  # Default to WIB (UTC+7)
+
     # Nuclei
     NUCLEI_BIN: str = "/usr/local/bin/nuclei"
     KATANA_BIN: str = "/usr/local/bin/katana"
     NUCLEI_TEMPLATES: str = "~/nuclei-templates"
     NUCLEI_RATE_LIMIT: int = 50
     NUCLEI_CONCURRENCY: int = 5
+
+    # Xray Scanner (Chaitin)
+    XRAY_BIN: str = "/usr/local/bin/xray"
+    XRAY_PLUGINS: str = "xss,sqldet,cmd-injection,dirscan,path-traversal,xxe,upload,brute-force,jsonp,ssrf,baseline,redirect,crlf-injection"  # Community edition plugins
 
     # Scan limits
     MAX_CONCURRENT_SCANS_PER_USER: int = 5
@@ -46,6 +53,11 @@ class Settings(BaseSettings):
 
     # Retention
     RAW_OUTPUT_RETENTION_DAYS: int = 90
+
+    # Comprehensive Scan Settings
+    COMPREHENSIVE_SCAN_TIMEOUT: int = 7200  # 2 hours max for comprehensive scan
+    XRAY_SCAN_TIMEOUT: int = 3600  # 1 hour max for Xray
+    KATANA_SCAN_TIMEOUT: int = 1800  # 30 minutes max for Katana
 
     class Config:
         env_file = ".env"
