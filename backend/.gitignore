@@ -1,0 +1,18 @@
+# Virtual environment
+venv/
+
+# Database
+*.db
+
+# Scan outputs
+/tmp/scanner-outputs/
+
+# Logs
+logs/
+
+# Environment
+.env
+
+# Python
+__pycache__/
+*.py[cod]
