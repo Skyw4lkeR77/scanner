@@ -55,7 +55,7 @@ def run_scan_job(job_id: int):
                 from app.services.katana import run_katana
                 
                 print(f"[Job {job_id}] Starting Katana crawling...")
-                katana_output = run_katana(job.target_url, job_id)
+                katana_output = run_katana(job.target_url, job_id, scan_mode=job.scan_mode)
                 
                 if katana_output and os.path.exists(katana_output):
                     # Count discovered endpoints

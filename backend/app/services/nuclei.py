@@ -35,7 +35,7 @@ def build_command(target: str, job_id: int, options: dict = None, is_list: bool 
     cmd = [
         settings.NUCLEI_BIN,
         target_flag, target,
-        "-severity", "low,medium,high,critical",
+        "-severity", "info,low,medium,high,critical",
         "-t", os.path.expanduser(settings.NUCLEI_TEMPLATES),
         "-j",  # JSON output
         "-duc",  # Disable update check
