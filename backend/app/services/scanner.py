@@ -134,7 +134,12 @@ def run_scan_job(job_id: int):
             db.commit()
 
             # Set timeout based on scan mode
-            timeout = settings.COMPREHENSIVE_SCAN_TIMEOUT if job.scan_mode == "comprehensive" else 3600
+            timeout_map = {
+                "fast": 1800,
+                "deep": 3600,
+                "comprehensive": settings.COMPREHENSIVE_SCAN_TIMEOUT,
+            }
+            timeout = timeout_map.get(job.scan_mode, 3600)
             stdout, stderr = process.communicate(timeout=timeout)
             returncode = process.returncode
             
@@ -180,6 +185,7 @@ def run_scan_job(job_id: int):
         # PHASE 3: Xray Scan (for comprehensive mode or if enabled)
         # ============================================================================
         xray_available = check_xray_binary() is not None
+        xray_findings = []  # Initialize here to avoid UnboundLocalError
         
         if xray_available and job.scan_mode in ("deep", "comprehensive"):
             job.progress_pct = 50.0
