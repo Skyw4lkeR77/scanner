@@ -133,16 +133,17 @@ def run_scan_job(job_id: int):
             job.pid = process.pid
             db.commit()
 
-            # Set timeout based on scan mode
+            # Set timeout based on scan mode.
+            # comprehensive = None means NO timeout, runs until fully done.
             timeout_map = {
-                "fast": 1800,
-                "deep": 3600,
-                "comprehensive": settings.COMPREHENSIVE_SCAN_TIMEOUT,
+                "fast": 1800,          # 30 min hard cap
+                "deep": 3600,          # 60 min hard cap
+                "comprehensive": None, # unlimited — run to completion
             }
             timeout = timeout_map.get(job.scan_mode, 3600)
             stdout, stderr = process.communicate(timeout=timeout)
             returncode = process.returncode
-            
+
             print(f"[Job {job_id}] Nuclei completed with return code {returncode}")
 
         except subprocess.TimeoutExpired:
